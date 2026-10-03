@@ -1,587 +1,927 @@
-#######   Mini Lms
+"""
+Mini LMS - Learning Management System
+=====================================
+A console-based LMS with Student, Teacher and Administrator portals.
+"""
+
+# ============================================================
+#                      CONFIGURATION
+# ============================================================
+
+WIDTH = 62
+INNER = WIDTH - 4  # usable text width inside a box
+
+
+# ============================================================
+#                    INTERFACE FUNCTIONS
+# ============================================================
+
+def line(char="═"):
+    print(char * WIDTH)
+
+
+def title(text):
+    print()
+    print("╔" + "═" * (WIDTH - 2) + "╗")
+    print("║" + text.center(WIDTH - 2) + "║")
+    print("╚" + "═" * (WIDTH - 2) + "╝")
+
+
+def section(text):
+    print()
+    print("┌" + "─" * (WIDTH - 2) + "┐")
+    print("│" + text.center(WIDTH - 2) + "│")
+    print("└" + "─" * (WIDTH - 2) + "┘")
+
+
+def card(rows, heading=None, double=False):
+    """Print a bordered card. `rows` is a list of (label, value) pairs."""
+    tl, tr, bl, br, h, v, ml, mr = (
+        ("╔", "╗", "╚", "╝", "═", "║", "╠", "╣") if double
+        else ("┌", "┐", "└", "┘", "─", "│", "├", "┤")
+    )
+    print()
+    print(tl + h * (WIDTH - 2) + tr)
+    if heading:
+        print(v + heading.center(WIDTH - 2) + v)
+        print(ml + h * (WIDTH - 2) + mr)
+    for label, value in rows:
+        text = f"{label:<13}: {value}" if label else ""
+        print(f"{v} {text:<{INNER}} {v}")
+    print(bl + h * (WIDTH - 2) + br)
+
+
+def menu(heading, options):
+    section(heading)
+    print("│" + " " * (WIDTH - 2) + "│")
+    for key, text in options:
+        print("│" + f"   [{key}]".ljust(8) + text.ljust(WIDTH - 10) + "│")
+    print("│" + " " * (WIDTH - 2) + "│")
+    print("└" + "─" * (WIDTH - 2) + "┘")
+
+
+def success(message):
+    print(f"\n  [SUCCESS] {message}")
+
+
+def error(message):
+    print(f"\n  [ERROR]   {message}")
+
+
+def info(message):
+    print(f"\n  [INFO]    {message}")
+
+
+def pause():
+    input("\n  Press ENTER to continue...")
+
+
+def ask(prompt):
+    return input(f"  {prompt} → ").strip()
+
+
+def main_header():
+    print()
+    print("╔════════════════════════════════════════════════════════════╗")
+    print("║                                                            ║")
+    print("║                      M I N I   L M S                       ║")
+    print("║                                                            ║")
+    print("║               LEARNING MANAGEMENT SYSTEM                   ║")
+    print("║                                                            ║")
+    print("╚════════════════════════════════════════════════════════════╝")
+
+
+def role_menu():
+    menu("SELECT YOUR ROLE", [
+        ("1", "Student"),
+        ("2", "Teacher"),
+        ("3", "Administrator"),
+        ("4", "Exit System"),
+    ])
+
+
+def student_menu():
+    menu("STUDENT PORTAL", [
+        ("1", "View My Profile"),
+        ("2", "View Available Courses"),
+        ("3", "Enroll in Course"),
+        ("4", "View My Courses"),
+        ("5", "View Course Assignments"),
+        ("6", "Submit Assignment"),
+        ("7", "View My Result"),
+        ("8", "Logout"),
+    ])
+
+
+def teacher_menu():
+    menu("TEACHER PORTAL", [
+        ("1", "View My Profile"),
+        ("2", "View My Courses"),
+        ("3", "View Course Assignments"),
+        ("4", "Create Assignment"),
+        ("5", "View Student Submissions"),
+        ("6", "Assign Marks"),
+        ("7", "View Student Results"),
+        ("8", "Logout"),
+    ])
+
+
+def admin_menu():
+    menu("ADMINISTRATION PORTAL", [
+        ("1", "View Admin Profile"),
+        ("2", "Add Student"),
+        ("3", "Add Teacher"),
+        ("4", "Create Course"),
+        ("5", "View All Students"),
+        ("6", "View All Teachers"),
+        ("7", "View All Courses"),
+        ("8", "Remove Student"),
+        ("9", "Remove Teacher"),
+        ("10", "Remove Course"),
+        ("11", "Logout"),
+    ])
+
+
+def logout(name):
+    title("LOGOUT")
+    print(f"  Goodbye, {name}!")
+    print("  Returning to role selection...")
+
+
+def find_by(items, attr, value):
+    """Return the first item whose attribute equals value, else None."""
+    return next((i for i in items if getattr(i, attr) == value), None)
+
+
+def get_grade(percentage):
+    if percentage >= 90:
+        return "A"
+    if percentage >= 80:
+        return "A-"
+    if percentage >= 70:
+        return "B+"
+    if percentage >= 65:
+        return "B"
+    if percentage >= 60:
+        return "C"
+    if percentage >= 55:
+        return "D"
+    return "F"
+
+
+# ============================================================
+#                       MODEL CLASSES
+# ============================================================
+
 class Student:
-    def __init__(self,std_name,std_id,std_email):
-           self.std_name = std_name
-           self.std_id = std_id
-           self.std_email = std_email
-           self.courses = []
-           self.submission = []
+
+    def __init__(self, std_name, std_id, std_email):
+        self.std_name = std_name
+        self.std_id = std_id
+        self.std_email = std_email
+        self.courses = []
+        self.submission = []
 
     def __str__(self):
-          return f"Student name = {self.std_name}\nStudent ID = {self.std_id}"
+        return (
+            f"Student Name : {self.std_name}\n"
+            f"Student ID   : {self.std_id}\n"
+            f"Email        : {self.std_email}"
+        )
 
-    def student_enroll(self,course):
-          self.courses.append(course)
-    def submit_assignment(self,assignment,course):
-         
-         if course in self.courses:
-                if assignment in course.assignments:
-                      submission_1 = AssignmentSubmission(self.std_id,assignment)
-                      self.submission.append(submission_1)
-                else:
-                       print("This is not your assigned assignment")
+    def student_enroll(self, course):
+        self.courses.append(course)
 
-    def check_grade(self,percentage,course):
-          if percentage >= 90:
-                print(f"{self.std_name} got A grade in {course.course_name}")
-          elif percentage >= 80:
-                print(f"{self.std_name} got A- grade in {course.course_name}") 
-          elif percentage >= 70:
-                print(f"{self.std_name} got B+ grade in {course.course_name}")
-          elif percentage >= 65:
-                print(f"{self.std_name} got B grade in {course.course_name}")  
-          elif percentage >= 60:
-                print(f"{self.std_name} got C grade in {course.course_name}")
-          elif percentage >= 55:
-                print(f"{self.std_name} got D grade in {course.course_name}")
-          else:
-                print(f"{self.std_name} got F grade")
-                print(f"{self.std_name} has been failed in this course in {course.course_name}")
-          
+    def submit_assignment(self, assignment, course):
+        """Submit an assignment. Returns True on success, False otherwise."""
+        if course not in self.courses:
+            error("You are not enrolled in this course.")
+            return False
 
-    def view_result(self,course):
-             percentage = 0
-             std_result = False
-             if course not in  self.courses:
-                   print("You are not enrolled in this course")
-             else:
-                   
-                   total_marks = 0
-                   get_marks = 0
-                   if course.assignments:
-                        if self.submission:
-                              for assignment in course.assignments:
-                                    total_marks += assignment.assignment_marks
-                                          
-                                    for submission in self.submission:
-                                                      
-                                          if submission.assignment == assignment:
-                                                if submission.obtained_marks is not None:
-                                                       get_marks += submission.obtained_marks
-                                                       std_result = True
-                                                            
-                        else:
-                               print(f"{self.std_name} has not submitted any assignment")
-                   else:
-                         print(f"{course.course_name} has no assignment yet")
-             if std_result == True:
-                   percentage = (get_marks * 100) / total_marks
-                   print(f"You have got {get_marks} from {total_marks} ")
-                   print(f"your marks Percentage = {percentage:.2f}%")
-                   self.check_grade(percentage,course)
+        if assignment not in course.assignments:
+            error("This is not your assigned assignment.")
+            return False
 
-                  
+        if any(s.assignment == assignment for s in self.submission):
+            error("You have already submitted this assignment.")
+            return False
 
-                               
+        self.submission.append(AssignmentSubmission(self.std_id, assignment))
+        return True
+
+    def check_grade(self, percentage, course):
+        card([
+            ("Student", self.std_name),
+            ("Course", course.course_name),
+            ("Percentage", f"{percentage:.2f}%"),
+            ("Grade", get_grade(percentage)),
+        ], heading="GRADE")
+
+    def view_result(self, course):
+        if course not in self.courses:
+            error("You are not enrolled in this course.")
+            return
+
+        if not course.assignments:
+            info(f"{course.course_name} has no assignment yet.")
+            return
+
+        if not self.submission:
+            info(f"{self.std_name} has not submitted any assignment.")
+            return
+
+        total_marks = 0
+        get_marks = 0
+        graded = False
+
+        for assignment in course.assignments:
+            total_marks += assignment.assignment_marks
+
+            for submission in self.submission:
+                if (
+                    submission.assignment == assignment
+                    and submission.obtained_marks is not None
+                ):
+                    get_marks += submission.obtained_marks
+                    graded = True
+
+        if not graded:
+            info("Your submitted assignments have not been graded yet.")
+            return
+
+        if total_marks == 0:
+            error("Total marks cannot be zero.")
+            return
+
+        percentage = (get_marks * 100) / total_marks
+
+        card([
+            ("Student", self.std_name),
+            ("Student ID", self.std_id),
+            ("Course", course.course_name),
+            ("", ""),
+            ("Marks", f"{get_marks} / {total_marks}"),
+            ("Percentage", f"{percentage:.2f}%"),
+        ], heading="STUDENT RESULT", double=True)
+
+        self.check_grade(percentage, course)
+
 
 class Teacher:
-      def __init__(self,tec_name,tec_id):
-            self.tec_name = tec_name
-            self.tec_id = tec_id
-            self.courses = []
-            self.submitted_assignment = []
-            self.created_assignment  =  []
 
-      def __str__(self):
-            return f"Teacher name = {self.tec_name }\nTeacher ID = {self.tec_id}"
+    def __init__(self, tec_name, tec_id):
+        self.tec_name = tec_name
+        self.tec_id = tec_id
+        self.courses = []
+        self.submitted_assignment = []
+        self.created_assignment = []
 
+    def __str__(self):
+        return (
+            f"Teacher Name : {self.tec_name}\n"
+            f"Teacher ID   : {self.tec_id}"
+        )
 
-      def add_course(self,course):
-            self.courses.append(course)
+    def add_course(self, course):
+        self.courses.append(course)
 
-      def create_assignment(self,course,assignment_id,assignment_title,assignment_marks):
-            assignment_1 = Assignment(course,assignment_id,assignment_title,assignment_marks)
-            course.assignments.append(assignment_1)
-            self.created_assignment.append(assignment_1)
-            
-      def assign_marks(self,submission,marks):
-            if self.tec_id == submission.assignment.course.course_tutor.tec_id:
-                 total_marks = submission.assignment.assignment_marks
-                 if marks < 0 or marks > total_marks:
-                      print("Invalid marks have been assigned")
-                 else:
-                      submission.obtained_marks = marks
-            else:
-                  print("Your input is invalid")
-            
+    def create_assignment(
+        self, course, assignment_id, assignment_title, assignment_marks
+    ):
+        assignment = Assignment(
+            course, assignment_id, assignment_title, assignment_marks
+        )
+        course.assignments.append(assignment)
+        self.created_assignment.append(assignment)
+
+    def assign_marks(self, submission, marks):
+        if self.tec_id != submission.assignment.course.course_tutor.tec_id:
+            error(
+                "You are not authorized to assign marks "
+                "to this submission."
+            )
+            return
+
+        total_marks = submission.assignment.assignment_marks
+
+        if marks < 0 or marks > total_marks:
+            error("Invalid marks have been assigned.")
+            return
+
+        submission.obtained_marks = marks
+        success(f"{marks}/{total_marks} marks assigned successfully.")
+
 
 class Course:
-      def __init__(self,course_name,course_id,course_tutor):
-            self.course_name = course_name
-            self.course_id = course_id
-            self.course_tutor = course_tutor
-            self.assignments = []
 
-      def __str__(self):
-           return f"Course ID: {self.course_id} | Course: {self.course_name}"
+    def __init__(self, course_name, course_id, course_tutor):
+        self.course_name = course_name
+        self.course_id = course_id
+        self.course_tutor = course_tutor
+        self.assignments = []
 
-class Assignment():
-      def __init__(self,course,assignment_id,assignment_title,assignment_marks):
-            self.course = course
-            self.assignment_id = assignment_id
-            self.assignment_title = assignment_title
-            self.assignment_marks = assignment_marks
+    def __str__(self):
+        return (
+            f"Course ID : {self.course_id}\n"
+            f"Course    : {self.course_name}\n"
+            f"Teacher   : {self.course_tutor.tec_name}"
+        )
+
+
+class Assignment:
+
+    def __init__(
+        self, course, assignment_id, assignment_title, assignment_marks
+    ):
+        self.course = course
+        self.assignment_id = assignment_id
+        self.assignment_title = assignment_title
+        self.assignment_marks = assignment_marks
+
+    def __str__(self):
+        return (
+            f"Assignment ID : {self.assignment_id}\n"
+            f"Title         : {self.assignment_title}\n"
+            f"Total Marks   : {self.assignment_marks}"
+        )
+
 
 class AssignmentSubmission:
-      def __init__(self,std_id,assignment):
-            self.std_id = std_id
-            self.assignment = assignment
-            self.obtained_marks = None
+
+    def __init__(self, std_id, assignment):
+        self.std_id = std_id
+        self.assignment = assignment
+        self.obtained_marks = None
+
 
 class Admin:
-      def __init__(self,adm_name,adm_id,adm_gmail,adm_profession):
-            self.adm_name = adm_name
-            self.adm_id = adm_id
-            self.adm_gmail = adm_gmail
-            self.adm_profession = adm_profession
-      def __str__(self):
-            return f"Name : {self.adm_name}\nProfession : {self.adm_profession}"
+
+    def __init__(self, adm_name, adm_id, adm_gmail, adm_profession):
+        self.adm_name = adm_name
+        self.adm_id = adm_id
+        self.adm_gmail = adm_gmail
+        self.adm_profession = adm_profession
+
+    def __str__(self):
+        return (
+            f"Name       : {self.adm_name}\n"
+            f"Admin ID   : {self.adm_id}\n"
+            f"Email      : {self.adm_gmail}\n"
+            f"Profession : {self.adm_profession}"
+        )
+
+
+# ============================================================
+#                     LMS DATABASE (IN-MEMORY)
+# ============================================================
 
 lms_std_user = []
 lms_tec_user = []
 lms_admin_user = []
 lms_courses = []
-     
-#students object
-
-std_1 =  Student("inam","2025-RIS-1","inamelahi243@gmail.com")  
-std_2 = Student("ali","2025-RIS-2","ali243@gmail.com")
-std_3 = Student("Zaid","2025-RIS-3","zaid456@gmail.com")
-std_4 = Student("Iqra Iqbal","2025-RIS-4","zaid456@gmail.com")
-std_5 = Student("Bisma Batool","2025-RIS-5","zaid456@gmail.com")
-
-#teacher objects
-tec_1 = Teacher("Dr.Shaid","shaid231_AP_1") 
-tec_2 = Teacher("Dr.Ali","ali342_AC_1")  
-tec_3 = Teacher("Dr.jawad siddiqui","jawad342_EM_1")
-tec_4 = Teacher("Ms.Sara Akhtar","sara383_GD_1")
-tec_5 = Teacher("Mr.Ahmad siddique","ahmad235_RC_1")
-#class objects
-crs_1 = Course("Applied Physic","AP101q",tec_1)
-crs_2 = Course("Applied Chemisty","AP C1039",tec_2)
-crs_3 = Course("Engineering Mechanics","EM 235b",tec_3)
-crs_4 = Course("Graphics and Designing","GD355a",tec_3)
-crs_5 = Course("Robotics_vision","Robotics78c",tec_3)
-
-tec_1.add_course(crs_1)
-tec_2.add_course(crs_2)
-tec_3.add_course(crs_3)
-tec_3.add_course(crs_4)
-tec_3.add_course(crs_5)
-
-adm_1 = Admin("Mustafa kamal","ADM001","mustafa123@gmail.com","Admission Manager")
-adm_2 = Admin("khizar Hayat","ADM002","Khizar123@gmail.com","Academic Coordinator")
-adm_3 = Admin("Mehmood-ul-hassan","ADM003","mehmood131@gmail.com","Result Manager")
-adm_4 = Admin("Aqib Hussain","ADM004","aqib127@gmail.com","Clerk")
-adm_5 = Admin("Thaira noreen","ADM005","noreen123@gmail.com","Examination officer")
-
-lms_admin_user.append(adm_1)
-lms_admin_user.append(adm_2)
-lms_admin_user.append(adm_3)
-lms_admin_user.append(adm_4)
-lms_admin_user.append(adm_5)
 
 
-lms_courses.append(crs_1)
-lms_courses.append(crs_2)
-lms_courses.append(crs_3)
-lms_courses.append(crs_4)
-lms_courses.append(crs_5)
+def load_sample_data():
+    """Populate the LMS with sample students, teachers, courses, admins."""
+    lms_std_user.extend([
+        Student("Inam", "2025-RIS-1", "inamelahi243@gmail.com"),
+        Student("Ali", "2025-RIS-2", "ali243@gmail.com"),
+        Student("Zaid", "2025-RIS-3", "zaid456@gmail.com"),
+        Student("Iqra Iqbal", "2025-RIS-4", "iqra456@gmail.com"),
+        Student("Bisma Batool", "2025-RIS-5", "bisma456@gmail.com"),
+    ])
 
-lms_std_user.append(std_1)
-lms_std_user.append(std_2)
-lms_std_user.append(std_3)
-lms_std_user.append(std_4)
-lms_std_user.append(std_5)
-lms_tec_user.append(tec_1)
-lms_tec_user.append(tec_2)
-lms_tec_user.append(tec_3)
-lms_tec_user.append(tec_4)
-lms_tec_user.append(tec_5)
+    tec_1 = Teacher("Dr. Shaid", "shaid231_AP_1")
+    tec_2 = Teacher("Dr. Ali", "ali342_AC_1")
+    tec_3 = Teacher("Dr. Jawad Siddiqui", "jawad342_EM_1")
+    tec_4 = Teacher("Ms. Sara Akhtar", "sara383_GD_1")
+    tec_5 = Teacher("Mr. Ahmad Siddique", "ahmad235_RC_1")
+    lms_tec_user.extend([tec_1, tec_2, tec_3, tec_4, tec_5])
 
-print("******* ====== ******** ====== *****")
-print("******* ====== ******** ====== *****")
-print("***     ====== Mini LMS ======   ***")
-print("******* ====== ******** ====== ******")
-print("******* ====== ******** ====== *****")
+    courses = [
+        (Course("Applied Physics", "AP101q", tec_1), tec_1),
+        (Course("Applied Chemistry", "AC1039", tec_2), tec_2),
+        (Course("Engineering Mechanics", "EM235b", tec_3), tec_3),
+        (Course("Graphics and Designing", "GD355a", tec_3), tec_3),
+        (Course("Robotics Vision", "Robotics78c", tec_3), tec_3),
+    ]
+    for course, tutor in courses:
+        tutor.add_course(course)
+        lms_courses.append(course)
 
-print("Enter your status:\n1:Student\n2:Teacher\n3:Admin ")
-user_choice = input("Enter your choice:")
-found = False
-if user_choice == "1":
-      user_id = input("Enter your Student ID : ")
-      for user in lms_std_user:
-            if user.std_id == user_id:
-                  found = True
-                  break
-      if found == False:
-            
-            print("STUDENT ID is not found ")
-      else: 
-        while True:
-                  print(f"Welcome : {user.std_name}")
-                  print("====== ====== ====== ======")
-                  print("====== STUDENT MENU ======")
-                  print("====== ====== ====== ======")
-                  print("""
-                        1: View My Profile
-                        2: View Available Courses
-                        3: Enroll in Course
-                        4: View My Courses
-                        5: View Course Assignments
-                        6: Submit Assignments
-                        7: View My result
-                        8: Logout""")
-                  choice = input("Enter your choice: ")
-                  if choice == "1":
-                        print(user)
-                  elif choice == "2":
-                        for course in lms_courses:
-                              if course not in user.courses:
-                                    print(course)
-                                    print("\n")
-                  elif choice == "3":
-                        enroll_crs_id = input("Enter the course ID :")
-                        course_found = False
-                        for course in lms_courses:
-                        
-                              if enroll_crs_id == course.course_id:
-                                          course_found = True
-                                          if course in user.courses:
-                                              print(f"You have already enrolled in this course = {course.course_name}")
-                                              break
-                                          else:
-                                              print(f"Course Name : {course}")
-                                              user.student_enroll(course)
-                                              print(f"You have enrolled now in {course.course_name}")
-                                              break
-                        
-                        if course_found == False:
-                              print(f"{enroll_crs_id} course ID is not Found")
-                  elif choice == "4":
-                        
-                        if user.courses:
-                              for course in user.courses:
-                                    print(f"you have enrolled in {course.course_name} " )
-                        else:
-                              print("You are not enrolled in any course")
-                  elif choice == "5":
-                        course_id = input("Enter the course ID : ")
-                        course_found = False
-                        for course in user.courses:
-                              if course_id == course.course_id:
-                                    course_found = True
-                                    if course_found:
-                                          print(course.course_name)
-                                          if course.assignments:
-                                                for assignment in course.assignments:
-                                                      print(assignment)
-                                                break
-                                          else:
-                                                print(f"{course.course_name} has no assignments")
-                        if course_found == False:
-                                   print("You are not enrolled by this course_id")
-                  elif choice == "6":
-                        course_id = input("Enter the course_id:")
-                        course_found = False
-                        assignment_found = False
-                        for course in user.courses:
-                              if course_id == course.course_id:
-                                    print(f"Yes,you are enrolled in {course.course_name}")
-                                    course_found = True
-                                    sbmt_assign_id = input("Enter your assignment ID:")
-                                    if course.assignments:
-                                         for assignment in course.assignments:
-                                               if sbmt_assign_id == assignment.assignment_id:
-                                                     print("Your assignment has been submitted")
-                                                     assignment_found = True
-                                                     user.submit_assignment(assignment,course)
-                                                     break
-                                                     
-                                         if assignment_found == False:
-                                                print(f"There is no uploaded assignment by this id")
-                                    else:
-                                          print("This course has no assignments")
-                        if course_found == False:
-                              print(f"You are not enrolled in any course by this {course_id}")
-                  elif choice == "7":
-                        course_id = input("Enter the course id:")
-                        for course in user.courses:
-                              if course_id == course.course_id:
-                                    user.view_result(course)
-                                    break
-                        
-                       
-                  elif choice == "8":
-                        print(f"Goodbye {user.std_name}!")
-                        break
-                                                                              
-            
-elif user_choice == "2":
-      user_id = input("Enter your Teacher ID : ")
-      for user in lms_tec_user:
-            if user.tec_id == user_id:
-                  found = True
-                  break
-      if found == False:
-            print("TEACHER ID is not found")
-      if found:
-            while True:
-                  print(f"Welcome : {user.tec_name}SB")
-                  print("====== ====== ====== ======")
-                  print("====== TEACHER MENU ======")
-                  print("====== ====== ====== ======")
-                  print("""
-                        1: View My Profile
-                        2: View My Courses
-                        3: View Courses Assignments
-                        4: Create Assignment
-                        5: View Student Submissions
-                        6: Assign Marks
-                        7: View Student Results
-                        8: Logout""")
+    lms_admin_user.extend([
+        Admin("Mustafa Kamal", "ADM001", "mustafa123@gmail.com",
+              "Admission Manager"),
+        Admin("Khizar Hayat", "ADM002", "khizar123@gmail.com",
+              "Academic Coordinator"),
+        Admin("Mehmood-ul-Hassan", "ADM003", "mehmood131@gmail.com",
+              "Result Manager"),
+        Admin("Aqib Hussain", "ADM004", "aqib127@gmail.com", "Clerk"),
+        Admin("Thaira Noreen", "ADM005", "noreen123@gmail.com",
+              "Examination Officer"),
+    ])
 
-                  user_choice = input("Enter your choice:")
-                  if user_choice == "1":
-                        print(user)
-                  elif user_choice == "2":
-                        if user.courses:
-                              print("Your's courses are below here:")
-                              for course in user.courses:
-                                    print(f"{course.course_name}")
-                        else:
-                              print("You have no course yet")
-                  elif user_choice == "3":
-                        course_id = input("Enter your course ID:")
-                        course_found = False
-                        if user.courses:
-                              for course in user.courses:
-                                    if course_id == course.course_id:
-                                          course_found = True
-                                          print(f"Verified,this course : {course.course_name} is assigned to you")
-                                          print("Course Assignments")
-                                          if course.assignments:
-                                                for assignment in course.assignments:
-                                                      print(assignment)
-                                                
-                                          else:
-                                                print(f"You have not created any assignment for this course")
-                                          break
-                              if course_found == False:
-                                    print(f"This course ID is not matching for your assigned courses")
-                        else:
-                              print(f"{user.tec_name}\nStill there is no course assigned to you by admin")
-                  elif user_choice == "4":
-                        course_id = input("Enter the course_ID:")
-                        found_course = False
-                        for course in user.courses:
-                              if course_id == course.course_id:
-                                    found_course = True
-                                    print(f"Course name : {course.course_name}")
-                                    assignment_id = input("Enter the assignment ID:")
-                                    assignment_title = input("Enter the assignment title:")
-                                    assignment_marks = int(input("Enter the assignment marks:"))
-                                    user.create_assignment(course,assignment_id,assignment_title,assignment_marks)
-                                    break
-                        if found_course == False:
-                              print(f"ID : {course_id} is not assigned to you\nYou cannot create assignment for this course")
-  
-                  elif user_choice == "5":
-                        no_of_submission = 0
-                        for std in lms_std_user:
-                              for submission in std.submission:
-                                    course_name = submission.assignment.course.course_name
-                                    teacher = submission.assignment.course.course_tutor
-                                    if teacher == user:
-                                          print(f"{std.std_name} has been submitted = {submission.assignment.assignment_title}\nof this course: {course_name}")
-                                          no_of_submission += 1
 
-                        print(f"Total Submission = {no_of_submission}")
-                  elif user_choice == "6":
-                        for std in lms_std_user:
-                              for submission in std.submission:
-                                    course_name = submission.assignment.course.course_name
-                                    teacher = submission.assignment.course.course_tutor
-                                    if teacher == user:
-                                          marks = submission.assignment.assignment_marks
-                                          print(f"Student: {std.std_name}")
-                                          print(f"Assignment: {submission.assignment.assignment_title}")
-                                          print(f"Total marks: {submission.assignment.assignment_marks}")
-                                          assigned_marks = int(input("How many marks you want to give this student"))
-                                          user.assign_marks(submission,assigned_marks)
-                  elif user_choice == "7":
-                        student_id = input("Enter your Student ID:")
-                        std_id_found = False
-                        for std in lms_std_user:
-                              if std.std_id == student_id:
-                                    std_id_found = True
-                                    if std.submission:
-                                          for submission in std.submission:
-                                                if submission.assignment.course.course_tutor == user:
-                                                      print(f"Student name : {std.std_name}")
-                                                      print(f"Course name : {submission.assignment.course.course_name}")
-                                                      print(f"Assignment title : {submission.assignment.assignment_title}")
-                                                      print(f"Total marks : {submission.assignment.assignment_marks}")
-                                                      print(f"Obtained marks : {submission.obtained_marks}")
+# ============================================================
+#                      STUDENT PORTAL
+# ============================================================
 
-                                    else:
-                                          print(f"{std.std_name} has not submitted any assignment for this course")
-                        if std_id_found == False:
-                              print(f"This id {student_id} is not matching")
+def print_assignments(course):
+    for number, assignment in enumerate(course.assignments, start=1):
+        print(f"\n  Assignment {number}")
+        print("  " + "─" * 33)
+        print(f"  ID    : {assignment.assignment_id}")
+        print(f"  Title : {assignment.assignment_title}")
+        print(f"  Marks : {assignment.assignment_marks}")
 
-                  elif user_choice == "8":
-                        print("Thankyou,stay connected")
-                        break
-                                    
 
-elif user_choice == "3":
-      user_id = input("Enter your ADMIN ID :")
+def student_portal(student):
+    while True:
+        title("STUDENT DASHBOARD")
+        print(f"  Welcome, {student.std_name}")
+        print(f"  Student ID: {student.std_id}")
+        student_menu()
+        choice = ask("Enter your choice")
 
-      for user in lms_admin_user:
-            if user.adm_id == user_id:
-                  found = True
-                  break
-      
-      if found == False: 
-            print("ADMIN ID is not found")
-      else:
-            while True:
-                  print(f"Welcome : {user.adm_name}")
-                  print("====== ====== ====== ======")
-                  print("====== ADMIN MENU ======")
-                  print("====== ====== ====== ======")
-                  print("""
-                        1: View Admin Profile
-                        2: Add Student
-                        3: Add Teacher
-                        4: Create Course
-                        5: View All Students
-                        6: View All Teachers
-                        7: View All Courses
-                        8: Remove Student
-                        9: Remove Teacher
-                        10: Remove Course
-                        11: Logout""")
-                  user_choice = input("Enter your choice:")
-                  if user_choice == "1":
-                        print(user)
-                  elif user_choice == "2":
-                        if user.adm_profession == "Admission Manager":
-                              
-                              std_id = input("Enter the student ID:")
-                              std_exist = False
-                              for std in lms_std_user:
-                                    if std.std_id == std_id:
-                                          std_exist = True
-                                          print(f"Student is already admitted by this {std_id} ")
-                              if std_exist == False:
-                                    std_gmail = input("Enter the student gmail:")
-                                    std_name = input("Enter the student name:")
-                                    std = Student(std_name,std_id,std_gmail)
-                                    lms_std_user.append(std)    
-                        else:
-                              print("You are not authorized to add Student")
-                  
-                  elif user_choice == "3":
-                        if user.adm_profession == "Academic Coordinator":
-                              teacher_id = input("Enter the teacher ID:")
-                              tec_exist = False
-                              for tec in lms_tec_user:
-                                    if teacher_id == tec.tec_id:
-                                          tec_exist = True
-                                          print(f"Teacher is already admitted  by this id {teacher_id}")
-                                          break     
-                              if tec_exist == False:
-                                    teacher_name = input("Enter the teacher name:")
-                                    tec = Teacher(teacher_name,teacher_id)
-                                    lms_tec_user.append(tec)
-                                    
-                        else:
-                              print("You are not authorized to add teacher")
+        if choice == "1":
+            title("MY PROFILE")
+            print(student)
+            pause()
 
-                  elif user_choice == "4":
-                        if user.adm_profession == "Academic Coordinator":
-                              course_exist = False
-                              course_id = input("Enter the course ID:")
-                              for course in lms_courses:
-                                    if course_id == course.course_id:
-                                          course_exist = True
-                                          print(f"The course has already been created with this ID {course_id}")
-                                          break
-                              if course_exist == False:
-                                    course_name = input("Enter the course name :")
-                                    tutor_id = input("Enter the course tutor:")
-                                    course_id = input("Enter the course ID:")
-                                    teacher_found = False
-                                    for tutor in lms_tec_user:
-                                          if tutor.tec_id == tutor_id:
-                                                teacher_found = True
-                                                course = Course(course_name,course_id,tutor)
-                                                lms_courses.append(course)
-                                                tutor.add_course(course)
-                                                break
-                                    if teacher_found == False:
-                                          print(f"Invalid Teacher ID")
-                        else:
-                              print(f"You are not authorized to create the course")
-                  elif user_choice == "5":
-                        print("Number of students:", len(lms_std_user))
-                        if len(lms_std_user) == 0:
-                              print("No student is registered yet")
-                        else:
-                              for std in lms_std_user:
-                                    print(std)
+        elif choice == "2":
+            title("AVAILABLE COURSES")
+            available = [c for c in lms_courses if c not in student.courses]
+            for course in available:
+                card([
+                    ("Course ID", course.course_id),
+                    ("Course", course.course_name),
+                    ("Teacher", course.course_tutor.tec_name),
+                ])
+            if not available:
+                info("No new courses are available.")
+            pause()
 
-                  elif user_choice =="6":
-                        if len(lms_tec_user) == 0:
-                              print("No teacher is registered yet")
-                        else:
-                              for tec in lms_tec_user:
-                                    print(tec)
-                  elif user_choice == "7":
-                        if len(lms_courses) == 0:
-                              print("No course is created yet")
-                        else:
-                              for course in lms_courses:
-                                    print(course)
-                  elif user_choice == "8":
-                        std_id = input("Enter the Student ID: ")
-                        student_found = False
-                        for std in lms_std_user:
-                              if std.std_id == std_id:
-                                    student_found = True
-                                    lms_std_user.remove(std)
-                                    print(f"Student {std_id} has been removed successfully.")
-                                    break
+        elif choice == "3":
+            title("COURSE ENROLLMENT")
+            course_id = ask("Enter the Course ID")
+            course = find_by(lms_courses, "course_id", course_id)
+            if course is None:
+                error(f"Course ID '{course_id}' was not found.")
+            elif course in student.courses:
+                info(f"You are already enrolled in {course.course_name}.")
+            else:
+                student.student_enroll(course)
+                success(
+                    f"You have successfully enrolled in {course.course_name}."
+                )
+            pause()
 
-                        if student_found == False:
-                              print(f"Student with ID {std_id} does not exist.")
-                  elif user_choice == "9":
-                         tec_id = input("Enter the teacher ID: ")
-                         teacher_found = False
-                         for teacher in lms_tec_user:
-                              if teacher.tec_id == tec_id:
-                                    teacher_found = True
-                                    lms_tec_user.remove(teacher)
-                                    print(f"Teacher {tec_id} has been removed successfully.")
-                                    break
+        elif choice == "4":
+            title("MY COURSES")
+            if student.courses:
+                for number, course in enumerate(student.courses, start=1):
+                    print(
+                        f"  [{number}] {course.course_id}  |  "
+                        f"{course.course_name}"
+                    )
+            else:
+                info("You are not enrolled in any course.")
+            pause()
 
-                         if teacher_found == False:
-                              print(f"Teacher with ID {tec_id} does not exist.")
-                  elif user_choice == "10":
-                         course_id = input("Enter the Course ID: ")
-                         course_found = False
-                         for course in lms_courses:
-                              if course.course_id == course_id:
-                                    course_found = True
-                                    lms_courses.remove(course)
-                                    print(f"Course {course_id} has been removed successfully.")
-                                    break
+        elif choice == "5":
+            title("COURSE ASSIGNMENTS")
+            course = find_by(
+                student.courses, "course_id", ask("Enter the Course ID")
+            )
+            if course is None:
+                error("You are not enrolled in this course.")
+            else:
+                section(course.course_name)
+                if course.assignments:
+                    print_assignments(course)
+                else:
+                    info(f"{course.course_name} has no assignments.")
+            pause()
 
-                         if course_found == False:
-                              print(f"Course with ID {course_id} does not exist.")
-                  elif user_choice == "11":
-                        print("Thankyou , Stay Connected")
-                        break
-else:
-      print("Your input is invalid")
+        elif choice == "6":
+            title("SUBMIT ASSIGNMENT")
+            course = find_by(
+                student.courses, "course_id", ask("Enter the Course ID")
+            )
+            if course is None:
+                error("You are not enrolled in this course.")
+            else:
+                print(f"\n  Course: {course.course_name}")
+                if not course.assignments:
+                    info("This course has no assignments.")
+                else:
+                    assignment = find_by(
+                        course.assignments,
+                        "assignment_id",
+                        ask("Enter Assignment ID"),
+                    )
+                    if assignment is None:
+                        error("No assignment was found with this ID.")
+                    elif student.submit_assignment(assignment, course):
+                        success("Assignment submitted successfully.")
+            pause()
+
+        elif choice == "7":
+            title("VIEW RESULT")
+            course = find_by(
+                student.courses, "course_id", ask("Enter the Course ID")
+            )
+            if course is None:
+                error("You are not enrolled in this course.")
+            else:
+                student.view_result(course)
+            pause()
+
+        elif choice == "8":
+            logout(student.std_name)
+            break
+
+        else:
+            error("Invalid choice. Please try again.")
+
+
+# ============================================================
+#                      TEACHER PORTAL
+# ============================================================
+
+def teacher_submissions(teacher):
+    """Yield (student, submission) pairs belonging to the teacher's courses."""
+    for std in lms_std_user:
+        for submission in std.submission:
+            if submission.assignment.course.course_tutor == teacher:
+                yield std, submission
+
+
+def teacher_portal(teacher):
+    while True:
+        title("TEACHER DASHBOARD")
+        print(f"  Welcome, {teacher.tec_name}")
+        print(f"  Teacher ID: {teacher.tec_id}")
+        teacher_menu()
+        choice = ask("Enter your choice")
+
+        if choice == "1":
+            title("MY PROFILE")
+            print(teacher)
+            pause()
+
+        elif choice == "2":
+            title("MY COURSES")
+            if teacher.courses:
+                for number, course in enumerate(teacher.courses, start=1):
+                    print(
+                        f"\n  [{number}] {course.course_id} | "
+                        f"{course.course_name}"
+                    )
+            else:
+                info("You have no courses yet.")
+            pause()
+
+        elif choice == "3":
+            title("COURSE ASSIGNMENTS")
+            if not teacher.courses:
+                info("There is no course assigned to you.")
+            else:
+                course = find_by(
+                    teacher.courses, "course_id", ask("Enter your Course ID")
+                )
+                if course is None:
+                    error("This course is not assigned to you.")
+                else:
+                    section(course.course_name)
+                    if course.assignments:
+                        print_assignments(course)
+                    else:
+                        info(
+                            "You have not created any assignment "
+                            "for this course."
+                        )
+            pause()
+
+        elif choice == "4":
+            title("CREATE ASSIGNMENT")
+            course = find_by(
+                teacher.courses, "course_id", ask("Enter the Course ID")
+            )
+            if course is None:
+                error("This course is not assigned to you.")
+            else:
+                print(f"\n  Course: {course.course_name}")
+                assignment_id = ask("Assignment ID")
+                assignment_title = ask("Assignment Title")
+                try:
+                    marks = int(ask("Total Marks"))
+                    if marks <= 0:
+                        error("Marks must be greater than zero.")
+                    else:
+                        teacher.create_assignment(
+                            course, assignment_id, assignment_title, marks
+                        )
+                        success("Assignment created successfully.")
+                except ValueError:
+                    error("Please enter a valid number.")
+            pause()
+
+        elif choice == "5":
+            title("STUDENT SUBMISSIONS")
+            count = 0
+            for std, submission in teacher_submissions(teacher):
+                card([
+                    ("Student", std.std_name),
+                    ("Assignment", submission.assignment.assignment_title),
+                    ("Course", submission.assignment.course.course_name),
+                ])
+                count += 1
+            print(f"\n  Total Submissions: {count}")
+            pause()
+
+        elif choice == "6":
+            title("ASSIGN MARKS")
+            found = False
+            for std, submission in teacher_submissions(teacher):
+                found = True
+                card([
+                    ("Student", std.std_name),
+                    ("Assignment", submission.assignment.assignment_title),
+                    ("Total Marks", submission.assignment.assignment_marks),
+                ])
+                try:
+                    marks = int(ask("Enter Obtained Marks"))
+                    teacher.assign_marks(submission, marks)
+                except ValueError:
+                    error("Please enter a valid number.")
+            if not found:
+                info("There are no submissions to grade.")
+            pause()
+
+        elif choice == "7":
+            title("STUDENT RESULTS")
+            student_id = ask("Enter Student ID")
+            std = find_by(lms_std_user, "std_id", student_id)
+            if std is None:
+                error(f"Student ID '{student_id}' was not found.")
+            else:
+                found = False
+                for submission in std.submission:
+                    if submission.assignment.course.course_tutor == teacher:
+                        found = True
+                        card([
+                            ("Student", std.std_name),
+                            ("Course", submission.assignment.course.course_name),
+                            ("Assignment", submission.assignment.assignment_title),
+                            ("Total Marks", submission.assignment.assignment_marks),
+                            ("Obtained", submission.obtained_marks),
+                        ])
+                if not found:
+                    info(
+                        f"No result is available for {std.std_name} "
+                        f"in your courses."
+                    )
+            pause()
+
+        elif choice == "8":
+            logout(teacher.tec_name)
+            break
+
+        else:
+            error("Invalid choice. Please try again.")
+
+
+# ============================================================
+#                       ADMIN PORTAL
+# ============================================================
+
+def admin_add_student(admin):
+    title("ADD STUDENT")
+    if admin.adm_profession != "Admission Manager":
+        error("You are not authorized to add students.")
+        return
+
+    std_id = ask("Student ID")
+    if find_by(lms_std_user, "std_id", std_id):
+        error(f"Student with ID {std_id} already exists.")
+        return
+
+    std_email = ask("Student Email")
+    std_name = ask("Student Name")
+    lms_std_user.append(Student(std_name, std_id, std_email))
+    success(f"Student {std_name} has been admitted successfully.")
+
+
+def admin_add_teacher(admin):
+    title("ADD TEACHER")
+    if admin.adm_profession != "Academic Coordinator":
+        error("You are not authorized to add teachers.")
+        return
+
+    teacher_id = ask("Teacher ID")
+    if find_by(lms_tec_user, "tec_id", teacher_id):
+        error(f"Teacher with ID {teacher_id} already exists.")
+        return
+
+    teacher_name = ask("Teacher Name")
+    lms_tec_user.append(Teacher(teacher_name, teacher_id))
+    success(f"Teacher {teacher_name} has been added successfully.")
+
+
+def admin_create_course(admin):
+    title("CREATE COURSE")
+    if admin.adm_profession != "Academic Coordinator":
+        error("You are not authorized to create courses.")
+        return
+
+    course_id = ask("Course ID")
+    if find_by(lms_courses, "course_id", course_id):
+        error(f"Course with ID {course_id} already exists.")
+        return
+
+    course_name = ask("Course Name")
+    tutor = find_by(lms_tec_user, "tec_id", ask("Teacher ID"))
+    if tutor is None:
+        error("Invalid Teacher ID.")
+        return
+
+    course = Course(course_name, course_id, tutor)
+    lms_courses.append(course)
+    tutor.add_course(course)
+    success(f"Course {course_name} created successfully.")
+
+
+def admin_list_students():
+    title("ALL STUDENTS")
+    print(f"\n  Total Students: {len(lms_std_user)}")
+    if not lms_std_user:
+        info("No student is registered yet.")
+    for number, std in enumerate(lms_std_user, start=1):
+        print(f"\n  [{number}]")
+        print(f"      Name  : {std.std_name}")
+        print(f"      ID    : {std.std_id}")
+        print(f"      Email : {std.std_email}")
+
+
+def admin_list_teachers():
+    title("ALL TEACHERS")
+    print(f"\n  Total Teachers: {len(lms_tec_user)}")
+    if not lms_tec_user:
+        info("No teacher is registered yet.")
+    for number, tec in enumerate(lms_tec_user, start=1):
+        print(f"\n  [{number}]")
+        print(f"      Name : {tec.tec_name}")
+        print(f"      ID   : {tec.tec_id}")
+
+
+def admin_list_courses():
+    title("ALL COURSES")
+    print(f"\n  Total Courses: {len(lms_courses)}")
+    if not lms_courses:
+        info("No course has been created yet.")
+    for number, course in enumerate(lms_courses, start=1):
+        print(f"\n  [{number}]")
+        print(f"      Course ID : {course.course_id}")
+        print(f"      Course    : {course.course_name}")
+        print(f"      Teacher   : {course.course_tutor.tec_name}")
+
+
+def admin_remove_student():
+    title("REMOVE STUDENT")
+    std_id = ask("Enter Student ID")
+    std = find_by(lms_std_user, "std_id", std_id)
+    if std is None:
+        error(f"Student with ID {std_id} does not exist.")
+        return
+    lms_std_user.remove(std)
+    success(f"Student {std_id} has been removed successfully.")
+
+
+def admin_remove_teacher():
+    title("REMOVE TEACHER")
+    tec_id = ask("Enter Teacher ID")
+    teacher = find_by(lms_tec_user, "tec_id", tec_id)
+    if teacher is None:
+        error(f"Teacher with ID {tec_id} does not exist.")
+        return
+    lms_tec_user.remove(teacher)
+    success(f"Teacher {tec_id} has been removed successfully.")
+
+
+def admin_remove_course():
+    title("REMOVE COURSE")
+    course_id = ask("Enter Course ID")
+    course = find_by(lms_courses, "course_id", course_id)
+    if course is None:
+        error(f"Course {course_id} does not exist.")
+        return
+
+    lms_courses.remove(course)
+    if course in course.course_tutor.courses:
+        course.course_tutor.courses.remove(course)
+    for std in lms_std_user:
+        if course in std.courses:
+            std.courses.remove(course)
+    success(f"Course {course_id} has been removed successfully.")
+
+
+def admin_portal(admin):
+    actions = {
+        "2": lambda: admin_add_student(admin),
+        "3": lambda: admin_add_teacher(admin),
+        "4": lambda: admin_create_course(admin),
+        "5": admin_list_students,
+        "6": admin_list_teachers,
+        "7": admin_list_courses,
+        "8": admin_remove_student,
+        "9": admin_remove_teacher,
+        "10": admin_remove_course,
+    }
+
+    while True:
+        title("ADMINISTRATION DASHBOARD")
+        print(f"  Welcome, {admin.adm_name}")
+        print(f"  Admin ID : {admin.adm_id}")
+        print(f"  Role     : {admin.adm_profession}")
+        admin_menu()
+        choice = ask("Enter your choice")
+
+        if choice == "1":
+            title("ADMIN PROFILE")
+            print(admin)
+            pause()
+
+        elif choice in actions:
+            actions[choice]()
+            pause()
+
+        elif choice == "11":
+            logout(admin.adm_name)
+            break
+
+        else:
+            error("Invalid choice. Please try again.")
+
+
+# ============================================================
+#                         LOGIN
+# ============================================================
+
+def login(role_title, prompt, users, id_attr, portal, not_found_msg):
+    title(role_title)
+    user = find_by(users, id_attr, ask(prompt))
+    if user is None:
+        error(not_found_msg)
+        pause()
+    else:
+        portal(user)
+
+
+# ============================================================
+#                       MAIN PROGRAM
+# ============================================================
+
+def main():
+    load_sample_data()
+
+    while True:
+        main_header()
+        role_menu()
+        choice = ask("Enter your choice")
+
+        if choice == "1":
+            login("STUDENT LOGIN", "Enter your Student ID",
+                  lms_std_user, "std_id", student_portal,
+                  "Student ID was not found.")
+
+        elif choice == "2":
+            login("TEACHER LOGIN", "Enter your Teacher ID",
+                  lms_tec_user, "tec_id", teacher_portal,
+                  "Teacher ID was not found.")
+
+        elif choice == "3":
+            login("ADMINISTRATOR LOGIN", "Enter your ADMIN ID",
+                  lms_admin_user, "adm_id", admin_portal,
+                  "ADMIN ID was not found.")
+
+        elif choice == "4":
+            title("EXIT SYSTEM")
+            print("  Thank you for using Mini LMS.")
+            print("  System closed successfully.")
+            break
+
+        else:
+            title("INVALID INPUT")
+            error("Your input is invalid. Please select 1, 2, 3, or 4.")
+            pause()
+
+    print()
+    line("═")
+    print(" " * 18 + "MINI LMS CLOSED")
+    print(" " * 12 + "Thank you for using the system.")
+    line("═")
+
+
+if __name__ == "__main__":
+    main()
