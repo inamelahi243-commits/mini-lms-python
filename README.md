@@ -1,90 +1,214 @@
-# Mini LMS
+# 🎓 Mini LMS
 
-## 📌 About the Project
+A beginner-level **console-based Learning Management System** built in Python using Object-Oriented Programming (OOP). Students, teachers, and administrators each get their own menu to manage courses, assignments, and results.
 
-Mini LMS is a beginner-level **console-based Learning Management System** built in Python using Object-Oriented Programming (OOP). It simulates three types of users — Students, Teachers, and Admins — who interact with courses, assignments, and results through a simple text-based menu system.
+Built with pure Python. No extra libraries needed.
 
-This project was built as a practical exercise to apply core Python and OOP concepts in a single connected system, rather than isolated small scripts.
+---
 
-## ✨ Features
+## What Can It Do?
 
-- Role-based access: Student, Teacher, and Admin each get their own menu
-- Course enrollment for students
-- Assignment creation by teachers
-- Assignment submission by students
-- Marks assignment and automatic grade calculation
-- Admin-level management of students, teachers, and courses
-- All interaction happens through the terminal using numbered menu choices
+| Role | What they can do |
+|------|------------------|
+| **Student** | Enroll in courses, submit assignments, view results and grades |
+| **Teacher** | Create assignments, view submissions, assign marks |
+| **Administrator** | Add or remove students, teachers, and courses |
 
-## 👥 User Roles
+---
 
-### Student
+## Quick Start
 
-- View student profile
+**1. Make sure Python 3.6 or newer is installed**
+
+```bash
+python --version
+```
+
+**2. Download the project**
+
+```bash
+git clone https://github.com/your-username/mini-lms.git
+cd mini-lms
+```
+
+**3. Run it**
+
+```bash
+python mini_lms.py
+```
+
+Use `python3 mini_lms.py` if `python` does not work on your computer.
+
+> Your terminal should support Unicode so the boxes display correctly.
+
+---
+
+## Try It Out
+
+The program comes with sample data. Log in using only the ID (no password).
+
+| Role | ID to use |
+|------|-----------|
+| Student | `2025-RIS-1` |
+| Teacher | `jawad342_EM_1` (teaches 3 courses) |
+| Admin (can add students) | `ADM001` |
+| Admin (can add teachers and courses) | `ADM002` |
+
+### A simple walkthrough
+
+1. Log in as a **Student** (`2025-RIS-1`) and enroll in course `EM235b`
+2. Log in as a **Teacher** (`jawad342_EM_1`) and create an assignment for `EM235b`
+3. Log in as the **Student** again and submit the assignment
+4. Log in as the **Teacher** and choose "Assign Marks"
+5. Log in as the **Student** and choose "View My Result" to see the percentage and grade
+
+---
+
+## Features
+
+### 👨‍🎓 Student
+
+- View profile
 - View available (not-yet-enrolled) courses
-- Enroll in a course by course ID
-- View enrolled courses
-- View assignments for an enrolled course
-- Submit an assignment
-- View result (total marks obtained, percentage, and letter grade)
-- Logout
+- Enroll in a course by course ID (duplicate enrollment is blocked)
+- View enrolled courses and their assignments
+- Submit an assignment (each assignment can be submitted only once)
+- View result: marks obtained, percentage, and letter grade
 
-### Teacher
+### 👨‍🏫 Teacher
 
-- View teacher profile
-- View assigned courses
+- View profile and assigned courses
 - View assignments for an assigned course
-- Create a new assignment for an assigned course
+- Create an assignment (total marks must be greater than zero)
 - View student submissions for their courses
-- Assign marks to a student's submission
-- View a specific student's results for their course
-- Logout
+- Assign marks (must be between 0 and the assignment's total marks)
+- View a specific student's results in their courses
 
-### Admin
-
-Admin actions are permission-based — each admin has a specific profession, and only certain professions can perform certain actions:
+### 🛠️ Administrator
 
 - View admin profile
-- Add a student *(requires "Admission Manager" profession)*
-- Add a teacher *(requires "Academic Coordinator" profession)*
-- Create a course and assign a teacher to it in the same step *(requires "Academic Coordinator" profession)*
-- View all students
-- View all teachers
-- View all courses
-- Remove a student
-- Remove a teacher
-- Remove a course
-- Logout
+- Add a student, add a teacher, create a course (assigning a teacher in the same step)
+- View all students, teachers, and courses
+- Remove a student, teacher, or course
 
-## 🧠 Python Concepts Practiced
+When a course is removed, it is also removed from its teacher's list and from every student's enrolled courses.
 
-This project was built to practice:
+---
 
-- Classes and objects (`Student`, `Teacher`, `Course`, `Assignment`, `AssignmentSubmission`, `Admin`)
-- Constructors (`__init__`) and instance attributes
-- Instance methods (e.g. `student_enroll()`, `create_assignment()`, `assign_marks()`)
-- The `__str__` method for readable object printing
-- Lists for storing collections of objects (students, teachers, courses, assignments, submissions)
-- Loops (`for`, `while`) for menus and searching through lists
-- Conditional statements (`if` / `elif` / `else`) for menu logic, permission checks, and grade calculation
-- Object relationships — objects storing references to other objects (e.g. a `Course` stores its `Teacher`, an `AssignmentSubmission` stores its `Assignment`)
-- Input handling with `input()` and basic type conversion (`int()`)
-- Basic validation (e.g. checking that assigned marks don't exceed the total, checking whether an ID already exists before adding a new user)
-- Searching through lists using loops to find a matching ID
-- Adding and removing objects from lists (`.append()`, `.remove()`)
+## Administrator Permissions
 
-## 🏗️ Project Structure / Classes
+Admin actions depend on the admin's profession.
+
+| Action | Who can do it |
+|--------|---------------|
+| Add student | Admission Manager |
+| Add teacher | Academic Coordinator |
+| Create course | Academic Coordinator |
+| View or remove anything | Any administrator |
+
+---
+
+## Grading Scale
+
+| Percentage | Grade |
+|:----------:|:-----:|
+| 90 and above | A |
+| 80 – 89 | A- |
+| 70 – 79 | B+ |
+| 65 – 69 | B |
+| 60 – 64 | C |
+| 55 – 59 | D |
+| Below 55 | F |
+
+---
+
+## All Sample Accounts
+
+<details>
+<summary>Click to see every sample account and course</summary>
+
+**Students**
+
+| Name | ID |
+|------|----|
+| Inam | `2025-RIS-1` |
+| Ali | `2025-RIS-2` |
+| Zaid | `2025-RIS-3` |
+| Iqra Iqbal | `2025-RIS-4` |
+| Bisma Batool | `2025-RIS-5` |
+
+**Teachers**
+
+| Name | ID | Courses |
+|------|----|---------|
+| Dr. Shaid | `shaid231_AP_1` | Applied Physics |
+| Dr. Ali | `ali342_AC_1` | Applied Chemistry |
+| Dr. Jawad Siddiqui | `jawad342_EM_1` | Engineering Mechanics, Graphics and Designing, Robotics Vision |
+| Ms. Sara Akhtar | `sara383_GD_1` | None |
+| Mr. Ahmad Siddique | `ahmad235_RC_1` | None |
+
+**Courses**
+
+| Course ID | Course Name | Teacher |
+|-----------|-------------|---------|
+| `AP101q` | Applied Physics | Dr. Shaid |
+| `AC1039` | Applied Chemistry | Dr. Ali |
+| `EM235b` | Engineering Mechanics | Dr. Jawad Siddiqui |
+| `GD355a` | Graphics and Designing | Dr. Jawad Siddiqui |
+| `Robotics78c` | Robotics Vision | Dr. Jawad Siddiqui |
+
+**Administrators**
+
+| Name | ID | Profession |
+|------|----|------------|
+| Mustafa Kamal | `ADM001` | Admission Manager |
+| Khizar Hayat | `ADM002` | Academic Coordinator |
+| Mehmood-ul-Hassan | `ADM003` | Result Manager |
+| Aqib Hussain | `ADM004` | Clerk |
+| Thaira Noreen | `ADM005` | Examination Officer |
+
+</details>
+
+---
+
+## How It Works
+
+The program starts with a role menu: Student, Teacher, Administrator, or Exit. After you enter a valid ID, you reach the menu for that role and choose actions by number. Logout returns you to the role menu, so you can log in as someone else. Exit closes the program.
+
+---
+
+## Project Structure
+
+```
+mini-lms/
+├── mini_lms.py   # The whole application
+└── README.md     # This file
+```
+
+Inside `mini_lms.py`, the code is arranged in this order:
+
+1. Configuration
+2. Interface helper functions
+3. Model classes
+4. In-memory database and sample data
+5. Student portal
+6. Teacher portal
+7. Admin portal
+8. Login function
+9. `main()` function
+
+### Classes
 
 | Class | Responsibility |
-|---|---|
-| `Student` | Stores student info, enrolled courses, and submissions. Handles enrolling, submitting assignments, and viewing results. |
+|-------|----------------|
+| `Student` | Stores student info, enrolled courses, and submissions. Handles enrolling, submitting, and viewing results. |
 | `Teacher` | Stores teacher info and assigned courses. Handles creating assignments and assigning marks. |
-| `Course` | Stores course info, its assigned teacher (`course_tutor`), and its list of assignments. |
-| `Assignment` | Stores assignment info (ID, title, total marks) and which course it belongs to. |
-| `AssignmentSubmission` | Represents a student's submission of a specific assignment, and the marks obtained. |
-| `Admin` | Stores admin info and profession, which determines what actions they're allowed to perform. |
+| `Course` | Stores course info, its teacher (`course_tutor`), and its assignments. |
+| `Assignment` | Stores ID, title, total marks, and its course. |
+| `AssignmentSubmission` | Links a student to an assignment and stores the marks obtained. |
+| `Admin` | Stores admin info and profession, which decides what the admin may do. |
 
-**Object relationships:**
+### Object relationships
 
 ```
 Student   → enrolls in →  Course
@@ -94,53 +218,52 @@ Student   → submits    →  Assignment (as an AssignmentSubmission)
 Teacher   → assigns marks to → AssignmentSubmission
 ```
 
-## ▶️ How to Run
+---
 
-1. Make sure Python 3 is installed on your computer.
-2. Download or clone this repository.
-3. Open the project folder in VS Code (or any editor/terminal).
-4. Open a terminal in that folder and run:
+## Python Concepts Practiced
 
-   ```bash
-   python mini_lms.py
-   ```
+- Classes, objects, constructors (`__init__`), and the `__str__` method
+- Object relationships (objects storing references to other objects)
+- Lists of custom objects with `.append()` and `.remove()`
+- Functions to split the program into reusable parts
+- Loops and conditionals for menus, permissions, and grading
+- `input()` handling and `int()` conversion with `try` / `except ValueError`
+- Basic validation (marks range, duplicate IDs, duplicate submissions)
+- A search helper using `getattr()` and `next()` with a generator expression
+- A generator function (`yield`) for a teacher's submissions
+- A dictionary of functions (with `lambda`) for admin menu actions
+- The `if __name__ == "__main__":` entry point
 
-5. Follow the on-screen prompts to select a role and log in using one of the sample IDs below.
+---
 
-**Sample IDs to try (from the built-in demo data):**
+## Current Limitations
 
-| Role | Sample ID |
-|---|---|
-| Student | `2025-RIS-1` |
-| Teacher | `shaid231_AP_1` |
-| Admin | `ADM002` (Academic Coordinator — can add teachers/courses) |
-| Admin | `ADM001` (Admission Manager — can add students) |
+- **No saved data:** everything is kept in memory and resets when the program closes
+- **No passwords:** login uses an existing ID only, and IDs are case-sensitive
+- **Limited validation:** names, emails, and IDs are accepted as typed
+- **No editing:** records and assignments can only be added or removed
+- **Assign Marks** prompts for every submission each time, including ones already graded
+- **Removing a teacher** does not remove or reassign their courses
 
-## 🖥️ How the Program Works
+---
 
-When the program starts, it asks you to choose a role: Student, Teacher, or Admin. After entering a valid ID for that role, you're taken into a menu specific to that role, where you enter a number to choose an action. The menu keeps repeating until you choose the logout option. Each role's menu only shows actions relevant to that role, and admin actions are further restricted based on the admin's profession.
+## Future Improvements
 
-## ⚠️ Current Limitations
+- Save data to a file or database
+- Password-based login
+- Editing for users, courses, and assignments
+- Stronger input validation
+- A graphical or web interface
 
-- **No persistent storage** — all data (students, courses, enrollments, submissions, grades) is held only in memory using Python lists. Once the program is closed, everything resets back to the original sample data the next time it runs.
-- **Single session only** — the program only asks for a role once at the start; you can't switch roles without restarting the program.
-- **Minimal input validation** — most inputs (IDs, names, emails) are accepted as typed, with only a few checks in place (such as marks not exceeding the assignment total, or an ID already existing).
-- **No authentication/passwords** — logging in only requires entering an existing ID, with no password protection.
+---
 
-## 🚀 Future Improvements
+## Learning Purpose
 
-These are ideas for later, not features that currently exist:
+This project was built to practice core Python and OOP concepts (classes, objects, relationships, functions, loops, conditionals, and lists of custom objects) in one connected system instead of small standalone scripts.
 
-- Persistent data storage (e.g. saving to a file) so data survives between runs
-- Stronger input validation across all menus
-- A graphical or web-based interface instead of the terminal
-- Basic authentication (passwords) for logging in
+---
 
-## 🎯 Learning Purpose
-
-This project was built as a hands-on way to practice and strengthen core Python and Object-Oriented Programming concepts — including classes, objects, relationships between objects, loops, conditionals, and working with lists of custom objects — by building something more connected and realistic than small standalone exercises.
-
-## 👨‍💻 Author
+## Author
 
 **Inamelahi**
 BS Robotics and Intelligent Systems student
